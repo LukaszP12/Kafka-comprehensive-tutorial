@@ -29,7 +29,8 @@ public class Main {
                 }
                 break;
             case "consumer":
-                try (SimpleConsumer c = new SimpleConsumer(bootstrap, topic, "demo-group")) {
+                String consumerName = args.length > 1 ? args[1] : "consumer-default";
+                try (SimpleConsumer c = new SimpleConsumer(bootstrap, topic, "demo-group", consumerName)) {
                     for (int i = 0; i < 20; i++) {
                         c.pollAndPrint();
                     }

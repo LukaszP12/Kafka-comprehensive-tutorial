@@ -12,9 +12,10 @@ import java.util.Properties;
 
 public class SimpleConsumer implements AutoCloseable {
     private final KafkaConsumer<String, String> consumer;
+    private final String name;
 
-
-    public SimpleConsumer(String bootstrapServers, String topic, String groupId) {
+    public SimpleConsumer(String bootstrapServers, String topic, String groupId, String name) {
+        this.name = name;
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
@@ -30,8 +31,8 @@ public class SimpleConsumer implements AutoCloseable {
     public void pollAndPrint() {
         ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(1));
         for (ConsumerRecord<String, String> record : records) {
-            System.out.printf("Consumed from %s-%d@%d key=%s value=%s%n",
-                    record.topic(), record.partition(), record.offset(), record.key(), record.value());
+            System.out.printf("[%s] Consumed from %s-%d@%d key=%s value=%s%n",
+                    name, record.topic(), record.partition(), record.offset(), record.key(), record.value());
         }
         consumer.commitSync();
     }
