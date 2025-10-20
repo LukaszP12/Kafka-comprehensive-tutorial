@@ -1,9 +1,14 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
+
+    <!-- Show Kafka retry + connection failure logs -->
+    <logger name="org.apache.kafka.clients.NetworkClient" level="WARN"/>
+    <logger name="org.apache.kafka.clients.producer.internals.Sender" level="WARN"/>
+
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>

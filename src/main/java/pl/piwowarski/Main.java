@@ -18,14 +18,15 @@ public class Main {
         switch (args[0]) {
             case "producer":
                 try (SimpleProducer p = new SimpleProducer(bootstrap, topic)) {
-                    for (int i = 1; i <= 10; i++) {
-                        try {
-                            p.sendSync("key-" + i, "hello-kafka-" + i);
-                            Thread.sleep(200);
-                        } catch (ExecutionException | InterruptedException e) {
-                            e.printStackTrace();
-                        }
+                    int i = 1;
+                    while (true) {
+                        p.sendAsync("key-" + i, "hello-kafka-" + i);
+                        System.out.println("Sent message " + i);
+                        i++;
+                        Thread.sleep(500);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
                 break;
             case "consumer":
