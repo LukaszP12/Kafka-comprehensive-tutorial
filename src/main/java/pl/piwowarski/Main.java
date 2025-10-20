@@ -1,7 +1,42 @@
 package pl.piwowarski;
 
+import pl.piwowarski.consumer.SimpleConsumer;
+import pl.piwowarski.producer.SimpleProducer;
+
+import java.util.concurrent.ExecutionException;
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello, World!");
+        String bootstrap = System.getenv().getOrDefault("KAFKA_BOOTSTRAP", "localhost:9092");
+        String topic = System.getenv().getOrDefault("KAFKA_TOPIC", "demo-topic");
+
+        if (args.length == 0) {
+            System.out.println("Please pass either 'producer' or 'consumer' as the first argument.");
+            return;
+        }
+
+        switch (args[0]) {
+            case "producer":
+                try (SimpleProducer p = new SimpleProducer(bootstrap, topic)) {
+                    for (int i = 1; i <= 10; i++) {
+                        try {
+                            p.sendSync("key-" + i, "hello-kafka-" + i);
+                            Thread.sleep(200);
+                        } catch (ExecutionException | InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                break;
+            case "consumer":
+                try (SimpleConsumer c = new SimpleConsumer(bootstrap, topic, "demo-group")) {
+                    for (int i = 0; i < 20; i++) {
+                        c.pollAndPrint();
+                    }
+                }
+                break;
+            default:
+                System.out.println("Unknown mode: " + args[0]);
+        }
     }
 }
