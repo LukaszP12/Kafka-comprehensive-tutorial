@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 public class SimpleProducer implements AutoCloseable{
     private final String topic;
     private final KafkaProducer<String, String> producer;
+    private static int retryCount = 0;
 
     public SimpleProducer(String bootstrapServers, String topic) {
         this.topic = topic;
@@ -20,8 +21,6 @@ public class SimpleProducer implements AutoCloseable{
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         // Safe & efficient defaults
-        props.put(ProducerConfig.ACKS_CONFIG, "all");
-        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
         props.put(ProducerConfig.LINGER_MS_CONFIG, 5);
         props.put(ProducerConfig.BATCH_SIZE_CONFIG, 32_768); // 32 KB
 
@@ -40,6 +39,20 @@ public class SimpleProducer implements AutoCloseable{
         ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
         RecordMetadata meta = producer.send(record).get();
         System.out.printf("Produced to %s-%d@%d key=%s value=%s%n", meta.topic(), meta.partition(), meta.offset(), key, value);
+    }
+
+    public void sendAsync(String key, String value) {
+        ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
+
+        producer.send(record, (metadata, exception) -> {
+            if (exception != null) {
+                retryCount++;
+                System.err.println("❌ RETRYING: " + exception.getMessage());
+            } else {
+                System.out.printf("✅ Sent to %s-%d@%d key=%s value=%s%n",
+                        metadata.topic(), metadata.partition(), metadata.offset(), key, value);
+            }
+        });
     }
 
     public void close() {
